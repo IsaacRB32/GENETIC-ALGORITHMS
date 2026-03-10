@@ -174,7 +174,7 @@ def mutacion(poblacion, prob):
 
 
 def funcionRastrigin(x):
-    # x[0] es la variable 'x', x[1] es la variable 'y'
+    # x[0] es la variable "x", x[1] es la variable "y"
     term1 = x[0]**2 - 10 * math.cos(2 * math.pi * x[0])
     term2 = x[1]**2 - 10 * math.cos(2 * math.pi * x[1])
     return 20 + term1 + term2
@@ -182,8 +182,7 @@ def funcionRastrigin(x):
 rango = [-5.12, 5.12]
 precision = 5
 
-##INPUTS ---
-
+##INPUTS
 tamanio_poblacion = 200
 total_generaciones = 200
 prob_cruzamiento = 0.8
@@ -241,8 +240,6 @@ for ejec in range(1, num_ejecuciones + 1):
             print(f"Gen {gen}: Mejor FO = {mejor_valor} en x={mejor_individuo}")
 
     resultados_ejecuciones.append(mejor_valor)
-# --- REPORTE FINAL ---
-
 
 print("\n**** REPORTE ESTADÍSTICO FINAL ****\n")
 

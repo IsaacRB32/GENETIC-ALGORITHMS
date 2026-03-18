@@ -1,3 +1,4 @@
+## ROJAS BARRÓN ISAAC - TAREA 2 Algoritmo genético básico
 import numpy as np
 import random
 import math
@@ -72,7 +73,7 @@ def evaluar(poblacionReal):
         valores.append(valor)
     return valores
 
-def seleccionPadresTorneo(poblacion, fitness):
+def seleccionPadresTorneo(poblacion, aptitud):
     ##Tamaño de la población
     Np = len(poblacion)
     ##Lista donde se guardan los ganadores
@@ -88,7 +89,7 @@ def seleccionPadresTorneo(poblacion, fitness):
         c2 = perm2[i]
         
         ##Queremos al más pequeño (min)
-        if fitness[c1] < fitness[c2]:
+        if aptitud[c1] < aptitud[c2]:
             padres.append(poblacion[c1].copy())
         else:
             padres.append(poblacion[c2].copy())

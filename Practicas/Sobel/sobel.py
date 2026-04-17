@@ -302,3 +302,4 @@ for i in range(10):
 print("RESUMEN DE LAS 10 EJECUCIONES PARA EL REPORTE")
 for res in historial_soluciones:
     print(f"Ejecución {res['Ejecucion']}: Alpha={res['Alpha']:<7.4f} | Delta={res['Delta']:<7.4f} | Aptitud={res['Aptitud']:.4f}")
+    

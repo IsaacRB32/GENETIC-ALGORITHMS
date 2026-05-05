@@ -182,7 +182,7 @@ def sustitucionElitismo(poblacion, hijos, aptitud):
 def funcion_objetivo(x):
     ## Rendimientos: BB(20%), LOP(42%), ILI(100%), HEAL(50%), QUI(46%), AUA(30%)
     Z = 0.20*x[0] + 0.42*x[1] + 1.00*x[2] + 0.50*x[3] + 0.46*x[4] + 0.30*x[5]
-    ## Se retorna negativo porque se busca minimizar
+    ## Se retorna negativo porque se busca maximizar
     return -Z
 
 

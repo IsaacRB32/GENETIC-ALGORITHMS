@@ -192,10 +192,8 @@ def funcion_objetivo(x):
     
     pesos = np.array(x)
     
-    # Se calcula el riesgo de la cartera (Forma cuadrática)
     riesgo = np.dot(pesos.T, np.dot(S, pesos))
     
-    # Como buscamos MINIMIZAR el riesgo, retornamos el valor tal cual
     return riesgo
 
 

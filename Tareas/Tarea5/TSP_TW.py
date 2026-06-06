@@ -152,32 +152,124 @@ def remocion_abruptos_insercion(ruta, t, Tw, m=3, lambda_penal=10):
         
     return hijo
 
+def cruce_cycle_crossover_dos_hijos(padre1, padre2):
+    """
+    Versión corregida y robusta de Cycle Crossover (CX) que genera DOS hijos.
+    Garantiza que no queden valores vacíos (None) ni elementos duplicados.
+    El depósito 0 se mantiene congelado en la primera posición.
+    """
+    # Medimos la longitud total de la ruta
+    n = len(padre1)
+    
+    # Inicializamos ambos hijos congelando el depósito en la posición 0
+    hijo1 = [0] + [None] * (n - 1)
+    hijo2 = [0] + [None] * (n - 1)
+    
+    # Usamos un mapa de posiciones visitadas (excluyendo el índice 0 del depósito)
+    posiciones_visitadas = set()
+    
+    # %Iniciar ciclo en cero
+    ciclo = 0
+    
+    # Recorremos la ruta posición por posición para detectar y armar ciclos
+    for i in range(1, n):
+        if i not in posiciones_visitadas:
+            # Encontramos un nuevo ciclo disponible
+            sub_ciclo = []
+            idx_actual = i
+            
+            # Rastreamos el ciclo completo hasta que regrese al inicio
+            while idx_actual not in sub_ciclo:
+                sub_ciclo.append(idx_actual)
+                valor_p2 = padre2[idx_actual]
+                idx_actual = padre1.index(valor_p2)
+                
+            # Registramos todas las posiciones de este sub-ciclo en la bitácora global
+            for pos in sub_ciclo:
+                posiciones_visitadas.add(pos)
+                
+            # % Asignar los valores a hijo 1 e hijo 2 alternando según el ciclo
+            if ciclo % 2 == 0:
+                # Ciclo par: Hijo1 copia de Padre1, Hijo2 copia de Padre2
+                for pos in sub_ciclo:
+                    hijo1[pos] = padre1[pos]
+                    hijo2[pos] = padre2[pos]
+            else:
+                # Ciclo impar (Alternancia): Hijo1 copia de Padre2, Hijo2 copia de Padre1
+                for pos in sub_ciclo:
+                    hijo1[pos] = padre2[pos]
+                    hijo2[pos] = padre1[pos]
+            
+            # %Alternar ciclo para la siguiente tanda
+            ciclo += 1
+            
+    return hijo1, hijo2
+
 ##--ALGORITMO GENÉTICO HÍBRIDO--##
 
-# Paso 1: Generar la población inicial (50 individuos con 10 ciudades cliente)
-poblacion_inicial = generar_poblacion_inicial(50, 10)
+# Parámetros
+tamano_poblacion = 50
+num_generaciones = 100
+pm = 0.05
 
-# Paso 1.2 y Paso 2: Evaluar y Aplicar Remoción de Abruptos a toda la población
-poblacion_paso2 = []
-vfo_iniciales = []
-vfo_optimizados = []
+# Paso 1: Generar población inicial
+poblacion = generar_poblacion_inicial(tamano_poblacion,10)
 
-for ind in poblacion_inicial:
-    # Evaluamos la aptitud original del individuo (Paso 1.2)
-    vfo_orig = evaluar_aptitud_tsptw(ind, t, Tw)
-    vfo_iniciales.append(vfo_orig)
-    
-    # Aplicamos la heurística local de inserción vecinal (Paso 2)
-    ind_optimizado = remocion_abruptos_insercion(ind, t, Tw, m=3)
-    poblacion_paso2.append(ind_optimizado)
-    
-    # Evaluamos el VFO de la ruta ya optimizada
-    vfo_opt = evaluar_aptitud_tsptw(ind_optimizado, t, Tw)
-    vfo_optimizados.append(vfo_opt)
+# Paso 2: Aplicar Remoción de Abruptos a toda la población
+for i in range(len(poblacion)):
+    poblacion[i] = remocion_abruptos_insercion(poblacion[i],t,Tw,m=3)
 
-# Mostramos una muestra pequeña de los primeros 5 resultados para validar
-print("\nMuestra de resultados (Primeros 5 individuos de la población):")
-for i in range(5):
-    print(f"Individuo {i+1}:")
-    print(f"  Ruta Inicial:    {poblacion_inicial[i]} | VFO: {vfo_iniciales[i]:.2f}")
-    print(f"  Ruta Optimizada: {poblacion_paso2[i]} | VFO: {vfo_optimizados[i]:.2f}")
+# Pasos 3, 4, 5 y 6 (Ciclo principal)
+for gen in range(num_generaciones):
+
+    nueva_poblacion = []
+
+    while len(nueva_poblacion) < tamano_poblacion:
+
+        # PASO 3: Selección de padres
+        padre1 = random.choice(poblacion)
+        padre2 = random.choice(poblacion)
+
+        if padre1 == padre2 and len(poblacion) > 1:
+            idx_alterno = (poblacion.index(padre1) + 1) % len(poblacion)
+            padre2 = poblacion[idx_alterno]
+
+        # Cruce CX
+        hijo1, hijo2 = cruce_cycle_crossover_dos_hijos(padre1,padre2)
+
+        # Aplicar Remoción de Abruptos a los descendientes
+        hijo1 = remocion_abruptos_insercion(hijo1,t,Tw,m=3)
+        hijo2 = remocion_abruptos_insercion(hijo2,t,Tw,m=3)
+
+        # PASO 4: Competencia familiar
+        familia = [padre1, padre2, hijo1, hijo2]
+
+        familia.sort(
+            key=lambda ruta: evaluar_aptitud_tsptw(ruta,t,Tw)
+        )
+
+        # Sobreviven los dos mejores
+        nueva_poblacion.append(familia[0])
+        nueva_poblacion.append(familia[1])
+
+    # Reemplazar población anterior
+    poblacion = nueva_poblacion
+
+    # PASO 5: Introducción de diversidad
+    if random.random() < pm:
+
+        nuevo_individuo = generar_poblacion_inicial(1,10)[0]
+
+        pos = random.randint(0,tamano_poblacion - 1)
+
+        poblacion[pos] = nuevo_individuo
+
+# Mejor solución encontrada
+mejor_ruta = min(poblacion,
+    key=lambda ruta: evaluar_aptitud_tsptw(ruta,t,Tw)
+)
+
+mejor_vfo = evaluar_aptitud_tsptw(mejor_ruta,t,Tw)
+
+print("Mejor ruta:", mejor_ruta)
+print("Mejor VFO:", mejor_vfo)

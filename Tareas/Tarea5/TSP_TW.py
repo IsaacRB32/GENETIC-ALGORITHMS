@@ -35,14 +35,12 @@ def generar_poblacion_inicial(tamano_poblacion, n_ciudades):
     poblacion = []
     
     ## Creamos una lista con las ciudades de 1 a n
-    ciudades = list(range(1, n_ciudades + 1))
-    
-    for _ in range(tamano_poblacion):
-        individuo = ciudades.copy()
-        # Desordenamos la lista de forma aleatoria
-        random.shuffle(individuo)
+    ciudades = list(range(n_ciudades))
 
-        individuo.insert(0, 0)
+    for _ in range(tamano_poblacion):
+
+        individuo = ciudades.copy()
+        random.shuffle(individuo)
 
         poblacion.append(individuo)
         
@@ -91,11 +89,8 @@ def remocion_abruptos_insercion(ruta, t, Tw, m=3, lambda_penal=10):
 
     hijo = ruta.copy()
     
-    ## Identificamos cuántas ciudades cliente hay (excluyendo el depósito 0)
-    num_ciudades_clientes = len(hijo) - 1 
-    
-    ## Recorre cada ciudad cliente (del 1 al n)
-    for i in range(1, num_ciudades_clientes + 1):
+    ## Recorre cada ciudad de la ruta
+    for i in hijo.copy():
         
         ## 1. SELECCIÓN ENTRE LAS CIUDADES MÁS CERCANAS
         ## Ordenamos los índices de la matriz de tiempo según su cercanía a la ciudad i
@@ -161,18 +156,18 @@ def cruce_cycle_crossover_dos_hijos(padre1, padre2):
     # Medimos la longitud total de la ruta
     n = len(padre1)
     
-    # Inicializamos ambos hijos congelando el depósito en la posición 0
-    hijo1 = [0] + [None] * (n - 1)
-    hijo2 = [0] + [None] * (n - 1)
+    # Inicializamos ambos hijos 
+    hijo1 = [None] * n
+    hijo2 = [None] * n
     
-    # Usamos un mapa de posiciones visitadas (excluyendo el índice 0 del depósito)
+    # Usamos un conjunto para registrar las posiciones visitadas
     posiciones_visitadas = set()
     
     # %Iniciar ciclo en cero
     ciclo = 0
     
     # Recorremos la ruta posición por posición para detectar y armar ciclos
-    for i in range(1, n):
+    for i in range(n):
         if i not in posiciones_visitadas:
             # Encontramos un nuevo ciclo disponible
             sub_ciclo = []
@@ -213,7 +208,7 @@ num_generaciones = 100
 pm = 0.05
 
 # Paso 1: Generar población inicial
-poblacion = generar_poblacion_inicial(tamano_poblacion,10)
+poblacion = generar_poblacion_inicial(tamano_poblacion,11)
 
 # Paso 2: Aplicar Remoción de Abruptos a toda la población
 for i in range(len(poblacion)):
@@ -227,15 +222,27 @@ for gen in range(num_generaciones):
     while len(nueva_poblacion) < tamano_poblacion:
 
         # PASO 3: Selección de padres
-        padre1 = random.choice(poblacion)
-        padre2 = random.choice(poblacion)
+        idx1 = random.randint(0, len(poblacion)-1)
+        idx2 = random.randint(0, len(poblacion)-1)
 
-        if padre1 == padre2 and len(poblacion) > 1:
-            idx_alterno = (poblacion.index(padre1) + 1) % len(poblacion)
-            padre2 = poblacion[idx_alterno]
+        while idx1 == idx2:
+            idx2 = random.randint(0, len(poblacion)-1)
+
+        padre1 = poblacion[idx1]
+        padre2 = poblacion[idx2]
 
         # Cruce CX
         hijo1, hijo2 = cruce_cycle_crossover_dos_hijos(padre1,padre2)
+
+        if sorted(hijo1) != list(range(11)):
+            print("ERROR HIJO1")
+            print(hijo1)
+            break
+
+        if sorted(hijo2) != list(range(11)):
+            print("ERROR HIJO2")
+            print(hijo2)
+            break
 
         # Aplicar Remoción de Abruptos a los descendientes
         hijo1 = remocion_abruptos_insercion(hijo1,t,Tw,m=3)
@@ -258,10 +265,10 @@ for gen in range(num_generaciones):
     # PASO 5: Introducción de diversidad
     if random.random() < pm:
 
-        nuevo_individuo = generar_poblacion_inicial(1,10)[0]
+        nuevo_individuo = generar_poblacion_inicial(1,11)[0]
 
         pos = random.randint(0,tamano_poblacion - 1)
-
+        nuevo_individuo = remocion_abruptos_insercion(nuevo_individuo,t,Tw,m=3)
         poblacion[pos] = nuevo_individuo
 
 # Mejor solución encontrada
